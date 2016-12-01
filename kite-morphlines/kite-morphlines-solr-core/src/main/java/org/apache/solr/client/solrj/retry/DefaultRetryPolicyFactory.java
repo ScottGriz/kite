@@ -18,7 +18,7 @@ package org.apache.solr.client.solrj.retry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 
@@ -47,7 +47,7 @@ public final class DefaultRetryPolicyFactory implements RetryPolicyFactory {
   }
   
   @Override
-  public RetryPolicy getRetryPolicy(Throwable exception, SolrRequest request, SolrServer server,
+  public RetryPolicy getRetryPolicy(Throwable exception, SolrRequest request, SolrClient server,
       RetryPolicy currentPolicy) {
     if (exception instanceof SolrException) {
       SolrException sex = (SolrException) exception;
@@ -55,6 +55,9 @@ public final class DefaultRetryPolicyFactory implements RetryPolicyFactory {
         return RetryPolicyFactory.DONT_RETRY; // no point retrying that - would never succeed
       }
       if (sex.code() == ErrorCode.UNSUPPORTED_MEDIA_TYPE.code) {
+        return RetryPolicyFactory.DONT_RETRY; // no point retrying that - would never succeed
+      }
+      if (sex.getMessage().startsWith("undefined field")) { // schema.xml mismatch, see IndexSchema.java
         return RetryPolicyFactory.DONT_RETRY; // no point retrying that - would never succeed
       }
     }
